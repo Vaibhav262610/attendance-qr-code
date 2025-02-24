@@ -1,33 +1,39 @@
 import { connectToDatabase } from "@/lib/mongodb";
 import Attendance from "@/models/Attendance";
+import { NextResponse } from "next/server";
 
 export async function POST(req) {
     try {
         await connectToDatabase();
-        const { scannedData } = await req.json();
 
-        // Extract studentId from the scanned URL
-        const url = new URL(scannedData, `http://${req.headers.host}`);
-        const studentId = url.pathname.split("/")[2]; // Assuming the URL format is /confirm-attendance/{studentId}
+        // Extract studentId from the request body
+        const { studentId } = await req.json();
+        console.log(req.json());
 
-        if (!studentId) {
-            return Response.json({ success: false, message: "❌ Invalid Student ID" }, { status: 400 });
-        }
+        console.log("Received studentId:", studentId);
 
+        // Fetch the existing attendance record
         const existingRecord = await Attendance.findOne({ studentId });
+        console.log("Existing Record:", existingRecord);
 
+        // Check if the student has already attended
         if (existingRecord && existingRecord.attended) {
-            return Response.json({ success: false, message: "❌ Already Marked!" }, { status: 400 });
+            console.log("Attendance already marked for student:", studentId);
+            return NextResponse.json({ success: false, message: "❌ Already Marked!" }, { status: 400 });
         }
 
+        // Update the attendance record or create a new one if it doesn't exist
         const updatedRecord = await Attendance.findOneAndUpdate(
             { studentId },
             { attended: true, generatedAt: Date.now() },
             { new: true, upsert: true }
         );
 
-        return Response.json({ success: true, data: updatedRecord });
+        console.log("Updated Record:", updatedRecord);
+
+        return NextResponse.json({ success: true, data: updatedRecord });
     } catch (error) {
-        return Response.json({ success: false, message: error.message }, { status: 500 });
+        console.error("Error occurred:", error); // Log the error for debugging
+        return NextResponse.json({ success: false, message: error.message }, { status: 500 });
     }
 }

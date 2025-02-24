@@ -1,4 +1,4 @@
-"use client";
+"use client"; // ✅ Add this line at the top
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -7,7 +7,7 @@ export default function ConfirmAttendance({ params }) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { studentId } = params;
-    const timestamp = searchParams.get("t");
+    const timestamp = searchParams.get("t"); // ✅ Correct way to get search params in app router
     const [message, setMessage] = useState("Marking attendance...");
 
     useEffect(() => {
@@ -19,9 +19,9 @@ export default function ConfirmAttendance({ params }) {
 
             const qrGeneratedTime = new Date(parseInt(timestamp));
             const currentTime = new Date();
-            const timeDifference = (currentTime - qrGeneratedTime) / 1000; // ✅ Convert to seconds
+            const timeDifference = (currentTime - qrGeneratedTime) / 60000; // Convert to minutes
 
-            if (timeDifference > 5) { // ✅ Change expiration to 5 SECONDS
+            if (timeDifference > 5) {
                 setMessage("❌ QR Code Expired!");
                 return;
             }
@@ -44,7 +44,7 @@ export default function ConfirmAttendance({ params }) {
     }, [studentId, timestamp]);
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center text-black bg-gray-100 p-6">
+        <div className="min-h-screen flex flex-col items-center justify-center bg-gray-400 p-6">
             <h1 className="text-2xl font-bold mb-4">{message}</h1>
             <button onClick={() => router.push("/")} className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md">
                 Go to Home
